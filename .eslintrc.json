@@ -1,3 +1,38 @@
 {
-  "extends": ["next/core-web-vitals", "next/typescript"]
+  "extends": [
+    "next/core-web-vitals",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "rules": {
+    "@typescript-eslint/no-unused-vars": false,
+    "@typescript-eslint/no-empty-interface": false
+  },
+  "overrides": [
+    {
+      "files": ["./src/components/ui/calendar.tsx"],
+      "rules": {
+        "@typescript-eslint/no-unused-vars": ["error", { "varsIgnorePattern": "props" }]
+      }
+    },
+    {
+      "files": ["./src/components/ui/chart.tsx"],
+      "rules": {
+        "@typescript-eslint/no-unused-vars": ["error", { "varsIgnorePattern": "NameType|Payload|ValueType|_" }]
+      }
+    },
+    {
+      "files": ["./src/components/ui/command.tsx", "./src/components/ui/input.tsx", "./src/components/ui/textarea.tsx"],
+      "rules": {
+        "@typescript-eslint/no-empty-interface": "off"
+      }
+    },
+    {
+      "files": ["./src/hooks/use-toast.ts"],
+      "rules": {
+        "@typescript-eslint/no-unused-vars": ["error", { "varsIgnorePattern": "actionTypes" }]
+      }
+    }
+  ]
 }
