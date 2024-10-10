@@ -24,6 +24,7 @@ export async function addLocation(data: {
   category: string;
   instagramId?: string;
   instagramUsername?: string;
+  instagramBio?: string;
 
 }) {
   const client = new MongoClient(uri)
@@ -55,6 +56,8 @@ export async function addLocation(data: {
       category: new ObjectId(data.category),
       instagramId: data.instagramId,
       instagramUsername: data.instagramUsername,
+      instagramBio: data.instagramBio,  
+
 
       createdAt: new Date(),
     }

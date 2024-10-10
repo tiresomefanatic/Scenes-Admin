@@ -1,79 +1,51 @@
 'use client'
 
-import React, { useState, FormEvent, useEffect } from 'react'
+import React, { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { fetchAndUploadReels, subscribeToProgress, unsubscribeFromProgress } from '../actions/fetchAndUploadReels'
+import { fetchAndUploadReels } from '../actions/fetchAndUploadReels'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { v4 as uuidv4 } from 'uuid'
+
+interface Location {
+  _id: string;
+  name: string;
+  formattedAddress: string;
+  instagramUsername: string;
+  instagramBio?: string;
+}
 
 export function ReelFetcher() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState([])
-  const [progress, setProgress] = useState(0)
+  const [searchResults, setSearchResults] = useState<Location[]>([])
   const [statusMessage, setStatusMessage] = useState('')
-  const [sessionId, setSessionId] = useState('')
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null)
  
   const router = useRouter()
 
-  const [formData, setFormData] = useState({
-    locationName: '',
-    reelCount: 1,
-  })
-
-  useEffect(() => {
-    const newSessionId = uuidv4()
-    setSessionId(newSessionId)
-
-    const handleProgress = (data: any) => {
-      if (data.type === 'progress') {
-        setProgress(data.progress)
-        setStatusMessage(data.message)
-      } else if (data.type === 'error') {
-        setStatusMessage(data.message)
-        setIsSubmitting(false)
-      }
-    }
-
-    const setupSubscription = async () => {
-      await subscribeToProgress(newSessionId, handleProgress)
-    }
-
-    setupSubscription()
-
-    return () => {
-      const cleanupSubscription = async () => {
-        await unsubscribeFromProgress(newSessionId, handleProgress)
-      }
-      cleanupSubscription()
-    }
-  }, [])
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: name === 'reelCount' ? parseInt(value) : value }));
-  };
+  const [reelCount, setReelCount] = useState(1)
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!selectedLocation) {
+      setStatusMessage('Please select a location first.')
+      return
+    }
     setIsSubmitting(true)
-    setProgress(0)
     setStatusMessage('Initiating reel fetch and upload...')
 
     try {
-      const result = await fetchAndUploadReels(formData, sessionId)
+      const result = await fetchAndUploadReels({
+        locationId: selectedLocation._id,
+        reelCount: reelCount,
+      })
       if (result.success) {
         setStatusMessage(result.message)
-        setProgress(100)
-        setFormData({
-          locationName: '',
-          reelCount: 1,
-        })
+        setSelectedLocation(null)
+        setReelCount(1)
         router.refresh()
       } else {
         setStatusMessage(result.message)
@@ -99,11 +71,8 @@ export function ReelFetcher() {
     }
   }
 
-  const handleAutofill = (location: any) => {
-    setFormData({
-      ...formData,
-      locationName: location.name,
-    })
+  const handleSelectLocation = (location: Location) => {
+    setSelectedLocation(location)
     setSearchResults([])
     setSearchQuery('')
     setStatusMessage(`Selected location: ${location.name}`)
@@ -133,52 +102,43 @@ export function ReelFetcher() {
           <div className="mb-4">
             <h3 className="font-semibold mb-2">Search Results:</h3>
             <ul className="space-y-4">
-              {searchResults.map((location: any) => (
+              {searchResults.map((location) => (
                 <li key={location._id} className="border p-4 rounded-md">
                   <h4 className="font-bold">{location.name}</h4>
                   <p><strong>Address:</strong> {location.formattedAddress}</p>
                   <p><strong>Instagram Username:</strong> {location.instagramUsername}</p>
-                  <Button onClick={() => handleAutofill(location)} className="mt-2">Select</Button>
+                  <p><strong>Instagram Bio:</strong> {location.instagramBio || 'N/A'}</p>
+                  <Button onClick={() => handleSelectLocation(location)} className="mt-2">Select</Button>
                 </li>
               ))}
             </ul>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <div className="space-y-2">
-            <Label htmlFor="locationName">Location Name</Label>
-            <Input
-              id="locationName"
-              name="locationName"
-              value={formData.locationName}
-              onChange={handleChange}
-              required
-            />
+        {selectedLocation && (
+          <div className="mb-4">
+            <h3 className="font-semibold mb-2">Selected Location:</h3>
+            <p><strong>{selectedLocation.name}</strong></p>
+            <p>{selectedLocation.formattedAddress}</p>
           </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
             <Label htmlFor="reelCount">Number of Reels to Fetch</Label>
             <Input
               id="reelCount"
-              name="reelCount"
               type="number"
               min="1"
-              value={formData.reelCount}
-              onChange={handleChange}
+              value={reelCount}
+              onChange={(e) => setReelCount(parseInt(e.target.value))}
               required
             />
           </div>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting || !selectedLocation}>
             {isSubmitting ? 'Processing...' : 'Fetch and Upload Reels'}
           </Button>
         </form>
-
-        {isSubmitting && (
-          <div className="mt-4 space-y-2">
-            <Progress value={progress} className="w-full" />
-            <p className="text-sm text-gray-500">{`${progress}% complete`}</p>
-          </div>
-        )}
 
         {statusMessage && (
           <Alert className="mt-4">

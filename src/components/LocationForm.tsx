@@ -44,6 +44,7 @@ export function LocationForm() {
     category: '',
     instagramId: '',
     instagramUsername: '',
+    instagramBio: '',
   })
 
   useEffect(() => {
@@ -125,6 +126,7 @@ export function LocationForm() {
           category: '',
           instagramId: '',
           instagramUsername: '',
+          instagramBio: '',
         })
         setInstagramPreview(null); // Clear Instagram preview
         setInstagramUsername(''); // Clear Instagram username input
@@ -174,6 +176,7 @@ export function LocationForm() {
         ...prev,
         instagramId: instagramPreview.id,
         instagramUsername: instagramPreview.username,
+        instagramBio: instagramPreview.biography,
       }));
     }
     setInstagramPreview(null); // Clear Instagram preview
@@ -349,7 +352,7 @@ export function LocationForm() {
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
-                {categories.map((category: any) => (
+                {categories?.map((category: any) => (
                   <SelectItem key={category._id} value={category._id}>
                     {category.name}
                   </SelectItem>
@@ -375,6 +378,15 @@ export function LocationForm() {
               onChange={handleChange}
             />
           </div>
+          <div className="space-y-2">
+          <Label htmlFor="instagramBio">Instagram Bio</Label>
+          <Textarea
+            id="instagramBio"
+            name="instagramBio"
+            value={formData.instagramBio}
+            onChange={handleChange}
+          />
+        </div>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Adding...' : 'Add Location'}
           </Button>
