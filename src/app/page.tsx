@@ -1,6 +1,7 @@
 import Image from "next/image";
 import dynamic from 'next/dynamic'
 import { ReelFetcher } from "@/components/ReelFetcher";
+import { CategoryForm } from "@/components/CategoryForm";
 
 const LocationForm = dynamic(() => import('../components/LocationForm').then((mod) => mod.LocationForm), { ssr: false })
 
@@ -14,6 +15,10 @@ export default function Home() {
         <div className="w-full mt-8">
           <h2 className="text-2xl font-bold mb-4">Add New Location</h2>
           <LocationForm />
+        </div>
+       < div className="w-full mt-8">
+          <h2 className="text-2xl font-bold mb-4">Add New Category</h2>
+        <CategoryForm/>
         </div>
         <div className="w-full mt-8">
           <h2 className="text-2xl font-bold mb-4">Add Videos to a location</h2>

@@ -52,6 +52,7 @@ async function fetchUserReels(userId: string) {
   }
 
   const response = await axios.request(options)
+  console.log('fetched user reels:', response.data)
   return response.data
 }
 
